@@ -139,7 +139,11 @@ def chat(req: ChatRequest):
     m = re.search(r"MOOD:\s*(playful|success|focus|error|ready|idle)", text, re.IGNORECASE)
     if m:
         mood = m.group(1).lower()
-    text = re.sub(r"^\s*MOOD:\s*\w+\s*$", "", text, flags=re.IGNORECASE | re.MULTILINE)
+    # retirer le token MOOD: <x> où qu'il soit (même collé en milieu de phrase)
+    text = re.sub(
+        r"\s*MOOD:\s*(playful|success|focus|error|ready|idle)\b\s*",
+        "\n\n", text, flags=re.IGNORECASE,
+    )
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
 
     # dédup sources
