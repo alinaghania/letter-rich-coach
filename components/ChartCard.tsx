@@ -16,10 +16,14 @@ export type Chart = {
 const PALETTE = ["#b0503a", "#3f7d54", "#caa23e", "#4f7a9e", "#8a5fa0", "#c2683f"];
 
 function fmtNum(v: number, unit?: string) {
-  const u = unit || "";
-  const pre = u === "$" || u === "€" || u === "£";
+  let u = (unit || "").trim();
+  const isCur = u === "$" || u === "€" || u === "£";
+  const isPct = u === "%";
+  if (!isCur && !isPct) u = ""; // drop mixed/garbage units (e.g. "$%%")
   const n = v.toLocaleString("en-US", { maximumFractionDigits: 2 });
-  return pre ? `${u}${n}` : `${n}${u ? " " + u : ""}`;
+  if (isCur) return `${u}${n}`;
+  if (isPct) return `${n}%`;
+  return n;
 }
 
 export default function ChartCard({ chart }: { chart: Chart }) {
