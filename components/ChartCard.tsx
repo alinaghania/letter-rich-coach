@@ -6,47 +6,74 @@ import {
 
 export type Chart = {
   title: string;
-  type: "bar" | "line" | "pie";
+  type: "bar" | "line" | "pie" | "donut" | "kpi";
   labels: string[];
   values: number[];
   unit?: string;
   insight: string;
 };
 
-const PALETTE = ["#9a4a32", "#3f7d54", "#c79a3c", "#5a7d9a", "#8a6d9a", "#b05c5c"];
+const PALETTE = ["#b0503a", "#3f7d54", "#caa23e", "#4f7a9e", "#8a5fa0", "#c2683f"];
+
+function fmtNum(v: number, unit?: string) {
+  const u = unit || "";
+  const pre = u === "$" || u === "€" || u === "£";
+  const n = v.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  return pre ? `${u}${n}` : `${n}${u ? " " + u : ""}`;
+}
 
 export default function ChartCard({ chart }: { chart: Chart }) {
   const data = chart.labels.map((l, i) => ({ name: l, value: chart.values[i] ?? 0 }));
-  const unit = chart.unit ? ` ${chart.unit}` : "";
-  const fmt = (v: number) => `${v.toLocaleString("fr-FR")}${unit}`;
+  const tip = (v: number) => fmtNum(v, chart.unit);
+  // a line with <3 points looks empty — render it as bars instead
+  const kind = chart.type === "line" && data.length < 3 ? "bar" : chart.type;
+
+  // --- BIG KPI tiles ---------------------------------------------------------
+  if (chart.type === "kpi") {
+    return (
+      <div className="chart">
+        <h4>{chart.title}</h4>
+        <div className="kpis" style={{ gridTemplateColumns: `repeat(${Math.min(data.length, 3)}, 1fr)` }}>
+          {data.map((d, i) => (
+            <div className="kpi" key={i}>
+              <span className="kpi-val" style={{ color: PALETTE[i % PALETTE.length] }}>{fmtNum(d.value, chart.unit)}</span>
+              <span className="kpi-lab">{d.name}</span>
+            </div>
+          ))}
+        </div>
+        <p className="insight">“{chart.insight}”</p>
+      </div>
+    );
+  }
 
   return (
     <div className="chart">
       <h4>{chart.title}</h4>
       <p className="insight">“{chart.insight}”</p>
       <ResponsiveContainer width="100%" height={210}>
-        {chart.type === "line" ? (
-          <LineChart data={data} margin={{ top: 6, right: 10, left: -10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e4e1d9" />
-            <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#6a665d" }} />
-            <YAxis tick={{ fontSize: 11, fill: "#6a665d" }} />
-            <Tooltip formatter={(v: number) => fmt(v)} />
-            <Line type="monotone" dataKey="value" stroke="#9a4a32" strokeWidth={2.5} dot={{ r: 3 }} />
+        {kind === "line" ? (
+          <LineChart data={data} margin={{ top: 6, right: 12, left: -8, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e7e2d8" vertical={false} />
+            <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#6b665b" }} />
+            <YAxis tick={{ fontSize: 11, fill: "#6b665b" }} />
+            <Tooltip formatter={(v: number) => tip(v)} />
+            <Line type="monotone" dataKey="value" stroke="#b0503a" strokeWidth={3} dot={{ r: 4, fill: "#b0503a" }} />
           </LineChart>
-        ) : chart.type === "pie" ? (
+        ) : kind === "pie" || kind === "donut" ? (
           <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={78} label>
+            <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%"
+              innerRadius={kind === "donut" ? 52 : 0} outerRadius={84} paddingAngle={2} label>
               {data.map((_, i) => <Cell key={i} fill={PALETTE[i % PALETTE.length]} />)}
             </Pie>
-            <Tooltip formatter={(v: number) => fmt(v)} />
+            <Tooltip formatter={(v: number) => tip(v)} />
           </PieChart>
         ) : (
-          <BarChart data={data} margin={{ top: 6, right: 10, left: -10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e4e1d9" vertical={false} />
-            <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#6a665d" }} />
-            <YAxis tick={{ fontSize: 11, fill: "#6a665d" }} />
-            <Tooltip formatter={(v: number) => fmt(v)} cursor={{ fill: "#f1efe9" }} />
-            <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+          <BarChart data={data} margin={{ top: 6, right: 12, left: -8, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e7e2d8" vertical={false} />
+            <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#6b665b" }} />
+            <YAxis tick={{ fontSize: 11, fill: "#6b665b" }} />
+            <Tooltip formatter={(v: number) => tip(v)} cursor={{ fill: "#f1ede5" }} />
+            <Bar dataKey="value" radius={[7, 7, 0, 0]}>
               {data.map((_, i) => <Cell key={i} fill={PALETTE[i % PALETTE.length]} />)}
             </Bar>
           </BarChart>

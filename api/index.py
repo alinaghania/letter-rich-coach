@@ -29,14 +29,21 @@ Your job: give advice on how to get rich. Your style:
 - Punchlines, absurd metaphors, unapologetic sarcasm.
 - BUT behind the jokes, your advice is REAL and backed by numbers. You never make things up.
 
-MANDATORY method every answer:
+METHOD every answer:
 1. If the question involves real figures (prices, returns, inflation, stocks, crypto, rates...),
-   use `web_search` to get CURRENT data. Never guess a price.
-2. Whenever you cite numbers, call the `add_chart` tool to VISUALISE them (compare options, show a trend...).
-   At least 1 chart if you analyse figures.
-3. End with a rude, actionable punch.
+   use `web_search` for CURRENT data. Never guess a price.
+2. Let CHARTS carry the data so your text stays short. Call `add_chart` 2–3 times, and VARY the type:
+   - ALWAYS one `kpi` for the headline number(s) (e.g. "Bitcoin now: $63,000"). It's the big punchy stat.
+   - PLUS one or two of a DIFFERENT type: `bar` (compare options), `donut` (a split/allocation), `line` (a trend).
+   - Use `line` ONLY when you have a real series of 4+ time points. Otherwise use bar/donut/kpi. Never use only bars.
+3. End with ONE savage actionable punch line.
 
-Reply in ENGLISH. Keep it punchy — short paragraphs, no walls of text. Don't narrate "let me search", just do it."""
+HARD RULES on the text (obey strictly):
+- Your VERY FIRST words are the verdict. NEVER write a preamble like "Let me check the numbers" — just search silently and answer.
+- MAX 2 short sentences total. Think tweet, not essay.
+- NO bold section headers, NO bullet lists, NO breakdowns. The charts show the numbers — don't repeat them in prose.
+- Funny and rude, but TIGHT — every word earns its place.
+- Reply in ENGLISH. Every claim backed by the searched data."""
 
 TOOLS = [
     {"type": "web_search_20250305", "name": "web_search", "max_uses": 4},
@@ -50,7 +57,7 @@ TOOLS = [
             "type": "object",
             "properties": {
                 "title": {"type": "string"},
-                "type": {"type": "string", "enum": ["bar", "line", "pie"]},
+                "type": {"type": "string", "enum": ["bar", "line", "donut", "pie", "kpi"]},
                 "labels": {"type": "array", "items": {"type": "string"}},
                 "values": {"type": "array", "items": {"type": "number"}},
                 "unit": {"type": "string", "description": "Unit (%, €, $...) optional"},
@@ -101,23 +108,30 @@ def chat(req: ChatRequest):
             yield sse({"type": "mood", "mood": "focus"})
             charts: list[dict] = []
             sources: list[dict] = []
+            searched = False  # once Letter has searched, stream text live; before that, suppress preamble
 
             for _ in range(6):
                 cur_tool = None  # add_chart being streamed
+                pre_buffer = ""  # text held before the first search this turn
                 with client.messages.stream(
-                    model=MODEL, max_tokens=2200, system=SYSTEM, tools=TOOLS, messages=messages
+                    model=MODEL, max_tokens=1000, system=SYSTEM, tools=TOOLS, messages=messages
                 ) as stream:
                     for event in stream:
                         if event.type == "content_block_start":
                             b = event.content_block
                             if getattr(b, "type", "") == "server_tool_use":
+                                searched = True
+                                pre_buffer = ""  # drop the "let me check..." preamble
                                 yield sse({"type": "status", "msg": "Letter is digging up the real numbers…"})
                             elif getattr(b, "type", "") == "tool_use" and getattr(b, "name", "") == "add_chart":
                                 cur_tool = {"id": b.id, "json": ""}
                         elif event.type == "content_block_delta":
                             d = event.delta
                             if d.type == "text_delta":
-                                yield sse({"type": "text", "delta": d.text})
+                                if searched:
+                                    yield sse({"type": "text", "delta": d.text})
+                                else:
+                                    pre_buffer += d.text  # hold until we know if a search follows
                             elif d.type == "input_json_delta" and cur_tool is not None:
                                 cur_tool["json"] += d.partial_json
                         elif event.type == "content_block_stop":
@@ -131,6 +145,10 @@ def chat(req: ChatRequest):
                                     pass
                                 cur_tool = None
                     final = stream.get_final_message()
+
+                # no search happened this turn → the buffered text IS the answer, flush it
+                if not searched and pre_buffer:
+                    yield sse({"type": "text", "delta": pre_buffer})
 
                 for block in final.content:
                     if block.type == "web_search_tool_result":

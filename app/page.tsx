@@ -88,24 +88,24 @@ export default function Home() {
   return (
     <div className="shell">
       <header className="head">
-        <span className="dot" /><h1>Letter</h1><span className="live">live</span>
+        <span className="mark">Letter 💸</span>
+        <span className="live"><span className="dot" />live</span>
       </header>
 
       {empty ? (
-        <div className={`hero ${loading ? "think" : ""}`}>
-          <img src={`/letter/${loading ? "wait" : mood === "hello" ? "playful" : mood}.png`} alt="Letter" />
-          <h2>Your brutally honest money coach.</h2>
-          <p>Ask Letter how to get rich. Real web research, real charts, zero mercy.</p>
+        <div className="center">
+          <div className={`hero ${loading ? "think" : ""}`}>
+            <img src={`/letter/${loading ? "wait" : "playful"}.png`} alt="Letter" />
+            <h2>Your brutally honest <em>money</em> coach.</h2>
+            <p>Ask Letter how to get rich. Real web research, real charts, zero mercy.</p>
+          </div>
+          <div className="suggest">
+            {SUGGESTIONS.map((s) => <button key={s} onClick={() => send(s)}>{s}</button>)}
+          </div>
         </div>
       ) : (
         <div className={`minihero ${loading ? "think" : ""}`}>
           <img src={`/letter/${loading ? "wait" : mood}.png`} alt="Letter" />
-        </div>
-      )}
-
-      {empty && (
-        <div className="suggest">
-          {SUGGESTIONS.map((s) => <button key={s} onClick={() => send(s)}>{s}</button>)}
         </div>
       )}
 
