@@ -1,0 +1,80 @@
+/* Letter Rich Coach — style inspiré d'AppForge : flat, warm off-white, accent clay.
+   Pas de gradient/glass. Coins doux. */
+:root {
+  --bg: #f7f5f1;
+  --surface: #ffffff;
+  --surface-2: #f1efe9;
+  --border: #e4e1d9;
+  --border-strong: #d6d2c8;
+  --text: #161512;
+  --text-muted: #6a665d;
+  --text-faint: #97928a;
+  --accent: #9a4a32;
+  --accent-tint: #f0e7e2;
+  --money: #3f7d54;
+  --radius: 14px;
+  --radius-sm: 9px;
+  --maxw: 860px;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg); color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+::selection { background: var(--accent-tint); color: var(--text); }
+
+.shell { max-width: var(--maxw); margin: 0 auto; padding: 22px 18px 140px; }
+
+/* Header */
+.head { display: flex; align-items: center; gap: 14px; padding: 8px 2px 18px; }
+.head img { width: 52px; height: 52px; }
+.head h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.head p { margin: 2px 0 0; font-size: 13px; color: var(--text-muted); }
+.badge { margin-left: auto; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent); background: var(--accent-tint); padding: 5px 10px; border-radius: 999px; font-weight: 600; }
+
+/* Mascot stage */
+.stage { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 20px 0 8px; }
+.stage img { width: 132px; height: 132px; transition: transform .25s ease; }
+.stage.think img { animation: bob 1.1s ease-in-out infinite; }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+.stage .tag { margin-top: 6px; font-size: 12px; color: var(--text-faint); }
+
+/* Messages */
+.msgs { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+.row { display: flex; }
+.row.me { justify-content: flex-end; }
+.bubble { max-width: 86%; padding: 13px 15px; border-radius: var(--radius);
+  font-size: 14.5px; line-height: 1.55; white-space: pre-wrap; word-wrap: break-word; }
+.row.me .bubble { background: var(--text); color: #fbfaf7; border-bottom-right-radius: 5px; }
+.row.bot .bubble { background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 5px; }
+.row.bot .bubble strong { color: var(--accent); }
+
+/* Chart card */
+.chart { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 14px 8px; margin-top: 12px; }
+.chart h4 { margin: 0 0 2px; font-size: 14px; font-weight: 700; }
+.chart .insight { font-size: 12.5px; color: var(--text-muted); margin: 0 0 10px; font-style: italic; }
+
+/* Sources */
+.sources { margin-top: 12px; font-size: 12px; color: var(--text-faint); }
+.sources b { color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; font-size: 10.5px; }
+.sources a { color: var(--accent); display: block; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Composer */
+.composer { position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, var(--bg) 72%, transparent);
+  padding: 16px; }
+.composer .inner { max-width: var(--maxw); margin: 0 auto; display: flex; gap: 9px;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: 999px; padding: 6px 6px 6px 18px; }
+.composer input { flex: 1; border: 0; outline: 0; background: transparent; font-size: 15px; color: var(--text); }
+.composer button { border: 0; background: var(--accent); color: #fff; font-weight: 600; font-size: 14px;
+  padding: 0 20px; border-radius: 999px; cursor: pointer; min-height: 42px; transition: opacity .15s; }
+.composer button:disabled { opacity: .45; cursor: not-allowed; }
+
+.suggest { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+.suggest button { border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-muted);
+  font-size: 12.5px; padding: 8px 13px; border-radius: 999px; cursor: pointer; transition: all .15s; }
+.suggest button:hover { border-color: var(--accent); color: var(--accent); }
