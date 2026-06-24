@@ -4,7 +4,7 @@ Backend FastAPI : Opus 4.8 (Azure Foundry) + web search natif + graphiques.
 Pattern compatible Vercel (ASGI app exposée sous `app`).
 """
 import os
-import json
+import re
 import anthropic
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -133,15 +133,14 @@ def chat(req: ChatRequest):
             continue
         break
 
-    # Extraire le MOOD de la première ligne
+    # Extraire le MOOD (où qu'il soit) puis retirer la/les ligne(s) MOOD du texte
     mood = "playful"
     text = final_text.strip()
-    if text.upper().startswith("MOOD:"):
-        first, _, rest = text.partition("\n")
-        candidate = first.split(":", 1)[1].strip().lower()
-        if candidate in {"playful", "success", "focus", "error", "ready", "idle"}:
-            mood = candidate
-        text = rest.strip()
+    m = re.search(r"MOOD:\s*(playful|success|focus|error|ready|idle)", text, re.IGNORECASE)
+    if m:
+        mood = m.group(1).lower()
+    text = re.sub(r"^\s*MOOD:\s*\w+\s*$", "", text, flags=re.IGNORECASE | re.MULTILINE)
+    text = re.sub(r"\n{3,}", "\n\n", text).strip()
 
     # dédup sources
     seen = set()
